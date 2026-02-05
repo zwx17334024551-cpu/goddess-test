@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>内在女神原型测试</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -13,8 +13,10 @@
             background: #fdf6e3;
             color: #4a3728;
             overflow-x: hidden;
+            /* 解决手机点击高亮和延迟问题 */
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
-        /* 模拟羊皮纸质感 */
         .paper-bg {
             background: radial-gradient(circle, #fff9f0 0%, #f3e5ab 100%);
             position: relative;
@@ -27,118 +29,106 @@
             background-image: url('https://www.transparenttextures.com/patterns/old-paper.png');
             pointer-events: none;
         }
-        /* MG 浮动粒子 */
-        .particle {
-            position: absolute;
-            background: rgba(212, 175, 55, 0.3);
-            border-radius: 50%;
-            pointer-events: none;
-            animation: float 20s infinite linear;
-        }
-        @keyframes float {
-            0% { transform: translateY(0) translateX(0); opacity: 0; }
-            50% { opacity: 0.8; }
-            100% { transform: translateY(-100vh) translateX(20px); opacity: 0; }
-        }
         /* 选项交互动画 */
         .option-card {
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-            border: 1px solid transparent;
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            border: 1px solid rgba(212, 175, 55, 0.2);
         }
-        .option-card:hover {
-            transform: translateY(-5px) scale(1.02);
-            border-color: #d4af37;
-            background: rgba(255, 255, 255, 0.6);
-            box-shadow: 0 10px 20px rgba(74, 55, 40, 0.1);
-        }
+        /* 适配手机端，按下时有明显的反馈 */
         .option-card:active {
-            transform: scale(0.98);
+            transform: scale(0.96);
+            background: rgba(212, 175, 55, 0.15);
         }
-        /* 页面切换动画 */
         .fade-enter-active, .fade-leave-active {
-            transition: opacity 0.8s ease, transform 0.8s ease;
+            transition: opacity 0.4s ease, transform 0.4s ease;
         }
-        .fade-enter-from { opacity: 0; transform: translateY(20px); }
-        .fade-leave-to { opacity: 0; transform: translateY(-20px); }
+        .fade-enter-from { opacity: 0; transform: translateX(10px); }
+        .fade-leave-to { opacity: 0; transform: translateX(-10px); }
+
+        .btn-shadow {
+            box-shadow: 0 4px 14px 0 rgba(139, 94, 60, 0.3);
+        }
     </style>
 </head>
 <body class="paper-bg min-h-screen flex items-center justify-center p-4">
 
-    <!-- 装饰粒子 -->
-    <div class="particle" style="left:10%; width:10px; height:10px; animation-delay:0s;"></div>
-    <div class="particle" style="left:30%; width:15px; height:15px; animation-delay:5s;"></div>
-    <div class="particle" style="left:80%; width:8px; height:8px; animation-delay:2s;"></div>
-
     <div id="app" class="max-w-2xl w-full z-10">
         <transition name="fade" mode="out-in">
             <!-- 1. 封面页 -->
-            <div v-if="step === 'start'" key="start" class="text-center space-y-8 p-8">
-                <h1 class="text-4xl md:text-5xl font-bold leading-tight tracking-widest text-[#8b5e3c]">
+            <div v-if="step === 'start'" key="start" class="text-center space-y-8 p-6">
+                <h1 class="text-4xl font-bold leading-tight tracking-widest text-[#8b5e3c]">
                     与你灵魂共鸣的<br>「内在女神」
                 </h1>
                 <p class="text-lg opacity-80 leading-relaxed italic">
-                    "When the goddess within whispers, will you hear her?"
+                    "When the goddess within whispers,<br>will you hear her?"
                 </p>
                 <div class="h-px w-24 bg-[#d4af37] mx-auto"></div>
-                <p class="text-sm leading-7 max-w-md mx-auto">
-                    在每个女孩心底，都住着一位古老的女神。<br>
-                    她正在悄悄影响着你的直觉、选择与关系模式。
+                <p class="text-sm leading-7 max-w-xs mx-auto opacity-70">
+                    在每个女孩心底，都住着一位古老的女神。通过这段旅程，触碰你最深处的性格原型。
                 </p>
-                <button @click="step = 'quiz'" class="mt-8 px-12 py-4 bg-[#8b5e3c] text-white rounded-full hover:bg-[#6f4a30] transition-transform active:scale-95 shadow-lg tracking-widest">
+                <button @click="step = 'quiz'" class="mt-8 px-14 py-4 bg-[#8b5e3c] text-white rounded-full btn-shadow transition-transform active:scale-90 tracking-widest font-bold">
                     开启旅程
                 </button>
             </div>
 
             <!-- 2. 测试页 -->
-            <div v-else-if="step === 'quiz'" key="quiz" class="space-y-8">
-                <div class="flex justify-between items-end">
-                    <span class="text-xs uppercase tracking-widest opacity-50">Question {{ currentIndex + 1 }} / 12</span>
-                    <div class="w-32 h-1 bg-gray-200 rounded-full overflow-hidden">
-                        <div class="h-full bg-[#d4af37] transition-all duration-500" :style="{width: ((currentIndex+1)/12)*100 + '%'}"></div>
-                    </div>
+            <div v-else-if="step === 'quiz'" key="quiz" class="space-y-6">
+                <!-- 顶部导航 -->
+                <div class="flex justify-between items-center px-1">
+                    <button @click="goBack" v-if="currentIndex > 0" class="text-[#8b5e3c] text-sm flex items-center opacity-70 hover:opacity-100 transition-opacity">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        上一题
+                    </button>
+                    <span v-else></span> <!-- 占位 -->
+                    <span class="text-[10px] uppercase tracking-widest opacity-40 font-bold">Quest {{ currentIndex + 1 }} / 12</span>
+                </div>
+
+                <!-- 进度条 -->
+                <div class="w-full h-1 bg-black/5 rounded-full overflow-hidden">
+                    <div class="h-full bg-[#d4af37] transition-all duration-700" :style="{width: ((currentIndex+1)/12)*100 + '%'}"></div>
                 </div>
                 
-                <h2 class="text-2xl font-bold text-[#4a3728] leading-snug">
+                <h2 class="text-xl md:text-2xl font-bold text-[#4a3728] leading-snug px-1">
                     {{ questions[currentIndex].title }}
                 </h2>
 
-                <div class="grid gap-4">
+                <div class="grid gap-3 pt-4">
                     <div v-for="(opt, key) in questions[currentIndex].options" 
                          :key="key" 
                          @click="handleSelect(key)"
-                         class="option-card p-5 rounded-xl bg-white/40 cursor-pointer flex items-center group">
-                        <span class="w-8 h-8 flex items-center justify-center rounded-full border border-[#d4af37] mr-4 group-hover:bg-[#d4af37] group-hover:text-white transition-colors">
+                         class="option-card p-4 rounded-2xl bg-white/50 cursor-pointer flex items-center">
+                        <span class="w-7 h-7 flex-shrink-0 flex items-center justify-center rounded-full border border-[#d4af37]/40 mr-4 text-xs text-[#8b5e3c] font-bold">
                             {{ key }}
                         </span>
-                        <span class="text-lg">{{ opt }}</span>
+                        <span class="text-md leading-tight">{{ opt }}</span>
                     </div>
                 </div>
             </div>
 
-            <!-- 3. 结果页 -->
-            <div v-else-if="step === 'result'" key="result" class="bg-white/60 backdrop-blur-md p-8 md:p-12 rounded-3xl shadow-2xl border border-white/40">
-                <div class="text-center mb-8">
-                    <span class="text-[#d4af37] tracking-[0.3em] font-bold">你的内在女神是</span>
-                    <h2 class="text-4xl font-bold mt-2 text-[#8b5e3c]">{{ resultData.name }}</h2>
-                    <p class="text-sm opacity-60 mt-1 uppercase tracking-tighter">{{ resultData.engName }}</p>
+            <!-- 3. 结果页 (保持不变，仅优化移动端间距) -->
+            <div v-else-if="step === 'result'" key="result" class="bg-white/70 backdrop-blur-md p-6 md:p-10 rounded-3xl shadow-2xl border border-white/50 mx-2">
+                <div class="text-center mb-6">
+                    <span class="text-[#d4af37] tracking-[0.3em] font-bold text-xs">你的内在女神是</span>
+                    <h2 class="text-3xl font-bold mt-2 text-[#8b5e3c] tracking-widest">{{ resultData.name }}</h2>
+                    <p class="text-[10px] opacity-50 mt-1 uppercase tracking-widest font-bold">{{ resultData.engName }}</p>
                 </div>
                 
-                <div class="space-y-6 text-[#4a3728]">
-                    <div class="bg-white/80 p-6 rounded-2xl">
-                        <h3 class="font-bold border-b border-[#d4af37] pb-2 mb-3 inline-block">内在底色</h3>
-                        <p class="leading-relaxed text-sm">{{ resultData.desc }}</p>
+                <div class="space-y-5 text-[#4a3728]">
+                    <div class="bg-white/60 p-5 rounded-2xl border border-[#d4af37]/10">
+                        <h3 class="text-xs font-bold border-b border-[#d4af37]/30 pb-2 mb-3 inline-block tracking-tighter">内在底色</h3>
+                        <p class="leading-relaxed text-sm opacity-90 text-justify">{{ resultData.desc }}</p>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-[#fdfaf0] p-4 rounded-xl">
-                            <h4 class="text-xs font-bold text-[#8b5e3c] mb-2">神性天赋</h4>
-                            <ul class="text-xs space-y-1">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-[#8b5e3c]/5 p-4 rounded-xl">
+                            <h4 class="text-[11px] font-bold text-[#8b5e3c] mb-2">✦ 神性天赋</h4>
+                            <ul class="text-[13px] space-y-1 opacity-80">
                                 <li v-for="t in resultData.talents">• {{ t }}</li>
                             </ul>
                         </div>
-                        <div class="bg-[#fdfaf0] p-4 rounded-xl">
-                            <h4 class="text-xs font-bold text-[#8b5e3c] mb-2">象征元素</h4>
-                            <p class="text-[10px] leading-relaxed">
+                        <div class="bg-[#d4af37]/5 p-4 rounded-xl">
+                            <h4 class="text-[11px] font-bold text-[#d4af37] mb-2">✦ 象征元素</h4>
+                            <p class="text-[12px] leading-relaxed opacity-80">
                                 颜色：{{ resultData.elements.color }}<br>
                                 植物：{{ resultData.elements.plant }}<br>
                                 水晶：{{ resultData.elements.crystal }}
@@ -146,8 +136,8 @@
                         </div>
                     </div>
 
-                    <button @click="reset" class="w-full py-4 text-xs tracking-widest border border-[#8b5e3c] rounded-full hover:bg-[#8b5e3c] hover:text-white transition-all">
-                        重新探索灵魂
+                    <button @click="reset" class="w-full py-4 mt-4 text-[11px] font-bold tracking-[0.2em] border border-[#8b5e3c]/30 rounded-full hover:bg-[#8b5e3c] hover:text-white transition-all active:scale-95">
+                        重新开启灵魂探索
                     </button>
                 </div>
             </div>
@@ -162,6 +152,8 @@
                 const step = ref('start');
                 const currentIndex = ref(0);
                 const scores = ref({ A: 0, B: 0, C: 0, D: 0, E: 0, F: 0 });
+                const choiceHistory = ref([]); // 记录每一步的选择，用于回退
+                const isClickLocked = ref(false); // 点击锁，防止连点
 
                 const questions = [
                     { title: "夜色降临，你推开一间静谧的木屋。圆桌上放着三件物品，你最先被哪个吸引？", options: { A: "月桂叶", B: "小油灯", C: "麦穗", D: "玫瑰花", E: "黑色羽毛", F: "刻纹石片" } },
@@ -179,20 +171,41 @@
                 ];
 
                 const goddessData = {
-                    A: { name: "阿尔忒弥斯", engName: "Artemis", desc: "内心像林间月光，宁愿一个人思考，也不愿被人群裹挟。对自由极其敏感。", talents: ["强大的直觉导航", "天生的界限感", "弱小的守护者"], elements: { color: "银白、深绿", plant: "月桂、白桦", crystal: "月光石" } },
-                    B: { name: "厄俄斯", engName: "Eos", desc: "内在像清晨柔软的阳光。天生带有一种“没关系，一切会好起来”的气质。", talents: ["天然的疗愈氛围", "极强的感官美学", "真诚的鼓励者"], elements: { color: "杏色、浅金", plant: "金盏花、橙花", crystal: "黄水晶" } },
-                    C: { name: "得墨忒耳", engName: "Demeter", desc: "内心像金色麦田，踏实温暖。比起大风大浪，更关注日常的安全感与细节。", talents: ["创造秩序与稳定", "把抽象变成具体", "强大的物质丰盛"], elements: { color: "暖棕、橄榄绿", plant: "小麦、橄榄", crystal: "橄榄石" } },
-                    D: { name: "芙蕾雅", engName: "Freya", desc: "内心像一团火。对生命有强烈的热情，需要喜欢的东西和美感来驱动自己。", talents: ["强大的吸引力磁场", "爆棚的创造力", "活出闪亮的自我"], elements: { color: "玫瑰金、暖红", plant: "玫瑰、肉桂", crystal: "石榴石" } },
-                    E: { name: "赫卡忒", engName: "Hecate", desc: "内心像通往深处的小路。对气氛、能量和潜台词极度敏锐，能整合光与暗。", talents: ["超强的细节洞察", "陪伴跨越门槛期", "看透逻辑的智慧"], elements: { color: "深紫、墨蓝", plant: "艾草、鼠尾草", crystal: "黑曜石" } },
-                    F: { name: "摩里甘", engName: "Morrigan", desc: "像暴风雨前的风。在一次次跌落站起的过程中，练就了惊人的韧性与清醒。", talents: ["割裂与重生的能力", "天然的边界守门人", "风暴中心的冷静"], elements: { color: "深酒红、黑紫", plant: "荨麻、杜松", crystal: "红碧玉" } }
+                    A: { name: "阿尔忒弥斯", engName: "Artemis", desc: "内心像安静的林间月光。宁愿一个人思考、观察，也不愿被闹哄哄的人群裹挟。她对“自由”极度敏感，一旦感到被束缚，就会下意识后撤一步。", talents: ["强大的直觉导航", "天生的界限感", "弱小者的守护者"], elements: { color: "银白、深绿", plant: "月桂、白桦", crystal: "月光石" } },
+                    B: { name: "厄俄斯", engName: "Eos", desc: "内在像清晨柔软的阳光。天生带有一种“没关系，一切会好起来”的气质。对美好、浪漫、细微的小确幸非常敏感，极易被治愈。", talents: ["天然的疗愈氛围", "极强的感官美学", "真诚的潜力鼓励者"], elements: { color: "杏色、浅金", plant: "金盏花、橙花", crystal: "黄水晶" } },
+                    C: { name: "得墨忒耳", engName: "Demeter", desc: "内心像一片金色麦田，踏实温暖。比起惊天动地的大事，更关注三餐、安全感和日常的细节，是天然的照顾者。", talents: ["创造秩序与稳定", "把抽象愿望变具体", "强大的物质显化力"], elements: { color: "暖棕、橄榄绿", plant: "小麦、橄榄", crystal: "橄榄石" } },
+                    D: { name: "芙蕾雅", engName: "Freya", desc: "内心像一团火。对生命有强烈的热情，需要美、爱和感官享受来驱动自己。在人群中极具存在感，审美体系明确。", talents: ["迷人的吸引力磁场", "爆棚的艺术创造力", "活出闪亮自我的榜样"], elements: { color: "玫瑰金、暖红", plant: "玫瑰、肉桂", crystal: "石榴石" } },
+                    E: { name: "赫卡忒", engName: "Hecate", desc: "内心像通往深处的小路。对气氛、能量和潜台词极度敏锐。别人觉得怪，她已看透逻辑。擅长陪伴他人度过痛苦的转折期。", talents: ["超群的心理洞察力", "陪伴跨越人生门槛", "整合阴影的智慧"], elements: { color: "深紫、墨蓝", plant: "艾草、鼠尾草", crystal: "黑曜石" } },
+                    F: { name: "摩里甘", engName: "Morrigan", desc: "内心像乌云压顶前的风，强大而清醒。经历过人生变故，在“跌落-站起”中练就了惊人韧性。对外不好惹，对内极保护。", talents: ["置之死地而重生的能力", "敏锐的局势雷达", "极端的冷静决策力"], elements: { color: "深酒红、黑紫", plant: "荨麻、杜松", crystal: "红碧玉" } }
                 };
 
                 const handleSelect = (key) => {
+                    if (isClickLocked.value) return; // 如果在保护期，直接返回
+                    
+                    isClickLocked.value = true;
                     scores.value[key]++;
+                    choiceHistory.value.push(key);
+                    
                     if (currentIndex.value < 11) {
-                        currentIndex.value++;
+                        setTimeout(() => {
+                            currentIndex.value++;
+                            isClickLocked.value = false; // 切换完成后解锁
+                            window.scrollTo(0, 0); // 每一题自动回顶，防止位置错乱
+                        }, 300); // 300ms的平滑过渡保护
                     } else {
-                        step.value = 'result';
+                        setTimeout(() => {
+                            step.value = 'result';
+                            isClickLocked.value = false;
+                        }, 300);
+                    }
+                };
+
+                const goBack = () => {
+                    if (currentIndex.value > 0) {
+                        const lastKey = choiceHistory.value.pop();
+                        scores.value[lastKey]--; // 减去最后一次选的分
+                        currentIndex.value--;
+                        window.scrollTo(0, 0);
                     }
                 };
 
@@ -207,10 +220,11 @@
                 const reset = () => {
                     step.value = 'start';
                     currentIndex.value = 0;
+                    choiceHistory.value = [];
                     Object.keys(scores.value).forEach(k => scores.value[k] = 0);
                 };
 
-                return { step, currentIndex, questions, handleSelect, resultData, reset };
+                return { step, currentIndex, questions, handleSelect, goBack, resultData, reset };
             }
         }).mount('#app');
     </script>
