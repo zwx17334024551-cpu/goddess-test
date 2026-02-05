@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>内在女神原型测试</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Serif SC', serif;
+            background: #fdf6e3;
+            color: #4a3728;
+            overflow-x: hidden;
+        }
+        /* 模拟羊皮纸质感 */
+        .paper-bg {
+            background: radial-gradient(circle, #fff9f0 0%, #f3e5ab 100%);
+            position: relative;
+        }
+        .paper-bg::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            opacity: 0.05;
+            background-image: url('https://www.transparenttextures.com/patterns/old-paper.png');
+            pointer-events: none;
+        }
+        /* MG 浮动粒子 */
+        .particle {
+            position: absolute;
+            background: rgba(212, 175, 55, 0.3);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: float 20s infinite linear;
+        }
+        @keyframes float {
+            0% { transform: translateY(0) translateX(0); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: translateY(-100vh) translateX(20px); opacity: 0; }
+        }
+        /* 选项交互动画 */
+        .option-card {
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            border: 1px solid transparent;
+        }
+        .option-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            border-color: #d4af37;
+            background: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 10px 20px rgba(74, 55, 40, 0.1);
+        }
+        .option-card:active {
+            transform: scale(0.98);
+        }
+        /* 页面切换动画 */
+        .fade-enter-active, .fade-leave-active {
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .fade-enter-from { opacity: 0; transform: translateY(20px); }
+        .fade-leave-to { opacity: 0; transform: translateY(-20px); }
+    </style>
+</head>
+<body class="paper-bg min-h-screen flex items-center justify-center p-4">
+
+    <!-- 装饰粒子 -->
+    <div class="particle" style="left:10%; width:10px; height:10px; animation-delay:0s;"></div>
+    <div class="particle" style="left:30%; width:15px; height:15px; animation-delay:5s;"></div>
+    <div class="particle" style="left:80%; width:8px; height:8px; animation-delay:2s;"></div>
+
+    <div id="app" class="max-w-2xl w-full z-10">
+        <transition name="fade" mode="out-in">
+            <!-- 1. 封面页 -->
+            <div v-if="step === 'start'" key="start" class="text-center space-y-8 p-8">
+                <h1 class="text-4xl md:text-5xl font-bold leading-tight tracking-widest text-[#8b5e3c]">
+                    与你灵魂共鸣的<br>「内在女神」
+                </h1>
+                <p class="text-lg opacity-80 leading-relaxed italic">
+                    "When the goddess within whispers, will you hear her?"
+                </p>
+                <div class="h-px w-24 bg-[#d4af37] mx-auto"></div>
+                <p class="text-sm leading-7 max-w-md mx-auto">
+                    在每个女孩心底，都住着一位古老的女神。<br>
+                    她正在悄悄影响着你的直觉、选择与关系模式。
+                </p>
+                <button @click="step = 'quiz'" class="mt-8 px-12 py-4 bg-[#8b5e3c] text-white rounded-full hover:bg-[#6f4a30] transition-transform active:scale-95 shadow-lg tracking-widest">
+                    开启旅程
+                </button>
+            </div>
+
+            <!-- 2. 测试页 -->
+            <div v-else-if="step === 'quiz'" key="quiz" class="space-y-8">
+                <div class="flex justify-between items-end">
+                    <span class="text-xs uppercase tracking-widest opacity-50">Question {{ currentIndex + 1 }} / 12</span>
+                    <div class="w-32 h-1 bg-gray-200 rounded-full overflow-hidden">
+                        <div class="h-full bg-[#d4af37] transition-all duration-500" :style="{width: ((currentIndex+1)/12)*100 + '%'}"></div>
+                    </div>
+                </div>
+                
+                <h2 class="text-2xl font-bold text-[#4a3728] leading-snug">
+                    {{ questions[currentIndex].title }}
+                </h2>
+
+                <div class="grid gap-4">
+                    <div v-for="(opt, key) in questions[currentIndex].options" 
+                         :key="key" 
+                         @click="handleSelect(key)"
+                         class="option-card p-5 rounded-xl bg-white/40 cursor-pointer flex items-center group">
+                        <span class="w-8 h-8 flex items-center justify-center rounded-full border border-[#d4af37] mr-4 group-hover:bg-[#d4af37] group-hover:text-white transition-colors">
+                            {{ key }}
+                        </span>
+                        <span class="text-lg">{{ opt }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. 结果页 -->
+            <div v-else-if="step === 'result'" key="result" class="bg-white/60 backdrop-blur-md p-8 md:p-12 rounded-3xl shadow-2xl border border-white/40">
+                <div class="text-center mb-8">
+                    <span class="text-[#d4af37] tracking-[0.3em] font-bold">你的内在女神是</span>
+                    <h2 class="text-4xl font-bold mt-2 text-[#8b5e3c]">{{ resultData.name }}</h2>
+                    <p class="text-sm opacity-60 mt-1 uppercase tracking-tighter">{{ resultData.engName }}</p>
+                </div>
+                
+                <div class="space-y-6 text-[#4a3728]">
+                    <div class="bg-white/80 p-6 rounded-2xl">
+                        <h3 class="font-bold border-b border-[#d4af37] pb-2 mb-3 inline-block">内在底色</h3>
+                        <p class="leading-relaxed text-sm">{{ resultData.desc }}</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-[#fdfaf0] p-4 rounded-xl">
+                            <h4 class="text-xs font-bold text-[#8b5e3c] mb-2">神性天赋</h4>
+                            <ul class="text-xs space-y-1">
+                                <li v-for="t in resultData.talents">• {{ t }}</li>
+                            </ul>
+                        </div>
+                        <div class="bg-[#fdfaf0] p-4 rounded-xl">
+                            <h4 class="text-xs font-bold text-[#8b5e3c] mb-2">象征元素</h4>
+                            <p class="text-[10px] leading-relaxed">
+                                颜色：{{ resultData.elements.color }}<br>
+                                植物：{{ resultData.elements.plant }}<br>
+                                水晶：{{ resultData.elements.crystal }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <button @click="reset" class="w-full py-4 text-xs tracking-widest border border-[#8b5e3c] rounded-full hover:bg-[#8b5e3c] hover:text-white transition-all">
+                        重新探索灵魂
+                    </button>
+                </div>
+            </div>
+        </transition>
+    </div>
+
+    <script>
+        const { createApp, ref, computed } = Vue;
+
+        createApp({
+            setup() {
+                const step = ref('start');
+                const currentIndex = ref(0);
+                const scores = ref({ A: 0, B: 0, C: 0, D: 0, E: 0, F: 0 });
+
+                const questions = [
+                    { title: "夜色降临，你推开一间静谧的木屋。圆桌上放着三件物品，你最先被哪个吸引？", options: { A: "月桂叶", B: "小油灯", C: "麦穗", D: "玫瑰花", E: "黑色羽毛", F: "刻纹石片" } },
+                    { title: "你握起物品，眼前浮现一扇门。门外吹来阵阵风，你听见——", options: { A: "柔和的夜风吹动树叶", B: "温暖的晨风带甜味", C: "土壤湿润的气息", D: "轻轻的笑声与低语", E: "不知名的小声呢喃", F: "低沉而空旷的风鸣" } },
+                    { title: "走出门，你站在森林入口。你本能地朝哪边走？", options: { A: "月光照亮的小径", B: "晨光泛金的林间空地", C: "有鸟雀与草香的田边", D: "隐约听见歌声的花园", E: "有影子晃动的深林", F: "风声更狂烈的山崖边" } },
+                    { title: "继续前行，一种强烈的感觉浮现心头：", options: { A: "我要单独前进", B: "有人在温柔陪伴我", C: "想确认大家是否安全", D: "想探索新的东西，好兴奋", E: "我能感觉到隐藏的东西", F: "我知道我会经历转折" } },
+                    { title: "突然，一只动物出现在你面前。你觉得它想传达什么？", options: { A: "鹿：保持独立", B: "金翅鸟：轻盈与希望", C: "母狐：照顾好你的人", D: "猫：美与享受", E: "黑狗：看见门背后的事", F: "乌鸦：准备迎接变化" } },
+                    { title: "地面出现一个符号，你的第一反应是：", options: { A: "指引路线的标记", B: "温暖的祝福", C: "保护用的符咒", D: "美得像艺术作品", E: "某种古老知识", F: "界线与禁忌之符" } },
+                    { title: "不远处升起一股轻烟，你闻到的烟味像——", options: { A: "月桂等清冽草香", B: "金盏花与柑橘香", C: "小麦与木头的安稳味", D: "玫瑰与香脂的浪漫", E: "艾草与柏树的神秘", F: "烟熏木与深调草药" } },
+                    { title: "烟雾散去，一件仪式道具让你忍不住想触碰：", options: { A: "弯月形的弓", B: "金色缎带", C: "暖色陶碗", D: "手持铜镜", E: "三叉钥匙杖", F: "燃烧过的黑色羽毛" } },
+                    { title: "前方岔路有石碑，你选择哪一条？", options: { A: "自由之路", B: "希望之路", C: "丰盛之路", D: "创造之路", E: "洞察之路", F: "重生之路" } },
+                    { title: "你沿着路走，忽然听见一句低语：", options: { A: "你不需要别人批准", B: "一切都会好起来的", C: "他们需要你", D: "你值得被爱，也值得美", E: "看清它，你会明白", F: "痛苦是门，穿过去会更强" } },
+                    { title: "天空浮现一句话，让你最有共鸣的是：", options: { A: "保持方向", B: "保持温暖", C: "保持踏实", D: "保持欲望", E: "保持敏锐", F: "保持锋利" } },
+                    { title: "最后出现六扇门，你走进哪一扇？", options: { A: "月亮纹银白之门", B: "朝阳纹浅金之门", C: "麦穗纹暖黄之门", D: "玫瑰纹玫红之门", E: "钥匙纹墨蓝之门", F: "乌鸦纹深紫之门" } },
+                ];
+
+                const goddessData = {
+                    A: { name: "阿尔忒弥斯", engName: "Artemis", desc: "内心像林间月光，宁愿一个人思考，也不愿被人群裹挟。对自由极其敏感。", talents: ["强大的直觉导航", "天生的界限感", "弱小的守护者"], elements: { color: "银白、深绿", plant: "月桂、白桦", crystal: "月光石" } },
+                    B: { name: "厄俄斯", engName: "Eos", desc: "内在像清晨柔软的阳光。天生带有一种“没关系，一切会好起来”的气质。", talents: ["天然的疗愈氛围", "极强的感官美学", "真诚的鼓励者"], elements: { color: "杏色、浅金", plant: "金盏花、橙花", crystal: "黄水晶" } },
+                    C: { name: "得墨忒耳", engName: "Demeter", desc: "内心像金色麦田，踏实温暖。比起大风大浪，更关注日常的安全感与细节。", talents: ["创造秩序与稳定", "把抽象变成具体", "强大的物质丰盛"], elements: { color: "暖棕、橄榄绿", plant: "小麦、橄榄", crystal: "橄榄石" } },
+                    D: { name: "芙蕾雅", engName: "Freya", desc: "内心像一团火。对生命有强烈的热情，需要喜欢的东西和美感来驱动自己。", talents: ["强大的吸引力磁场", "爆棚的创造力", "活出闪亮的自我"], elements: { color: "玫瑰金、暖红", plant: "玫瑰、肉桂", crystal: "石榴石" } },
+                    E: { name: "赫卡忒", engName: "Hecate", desc: "内心像通往深处的小路。对气氛、能量和潜台词极度敏锐，能整合光与暗。", talents: ["超强的细节洞察", "陪伴跨越门槛期", "看透逻辑的智慧"], elements: { color: "深紫、墨蓝", plant: "艾草、鼠尾草", crystal: "黑曜石" } },
+                    F: { name: "摩里甘", engName: "Morrigan", desc: "像暴风雨前的风。在一次次跌落站起的过程中，练就了惊人的韧性与清醒。", talents: ["割裂与重生的能力", "天然的边界守门人", "风暴中心的冷静"], elements: { color: "深酒红、黑紫", plant: "荨麻、杜松", crystal: "红碧玉" } }
+                };
+
+                const handleSelect = (key) => {
+                    scores.value[key]++;
+                    if (currentIndex.value < 11) {
+                        currentIndex.value++;
+                    } else {
+                        step.value = 'result';
+                    }
+                };
+
+                const resultData = computed(() => {
+                    let maxKey = 'A';
+                    for (let key in scores.value) {
+                        if (scores.value[key] > scores.value[maxKey]) maxKey = key;
+                    }
+                    return goddessData[maxKey];
+                });
+
+                const reset = () => {
+                    step.value = 'start';
+                    currentIndex.value = 0;
+                    Object.keys(scores.value).forEach(k => scores.value[k] = 0);
+                };
+
+                return { step, currentIndex, questions, handleSelect, resultData, reset };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
