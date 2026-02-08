@@ -6,140 +6,208 @@
     <title>内在女神原型测试</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;600;900&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --paper-dark: #e8d5b7;
+            --paper-light: #fdf6e3;
+            --ink: #4a3728;
+            --gold: #b38b4d;
+            --accent: #8b5e3c;
+        }
+
         body {
             font-family: 'Noto Serif SC', serif;
-            background: #fdf6e3;
-            color: #4a3728;
+            background-color: var(--paper-dark);
+            color: var(--ink);
+            line-height: 1.8;
             overflow-x: hidden;
-            /* 解决手机点击高亮和延迟问题 */
             -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
         }
-        .paper-bg {
-            background: radial-gradient(circle, #fff9f0 0%, #f3e5ab 100%);
+
+        /* 复古纸张纹理背景 */
+        .texture-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at center, rgba(253, 246, 227, 0.8) 0%, rgba(232, 213, 183, 0.9) 100%),
+                url('https://www.transparenttextures.com/patterns/paper-fibers.png');
+            opacity: 0.8;
+        }
+
+        /* 装饰边框 */
+        .frame-ornament {
             position: relative;
+            padding: 2rem 1.5rem;
         }
-        .paper-bg::after {
+        .frame-ornament::before, .frame-ornament::after {
             content: "";
             position: absolute;
-            inset: 0;
-            opacity: 0.05;
-            background-image: url('https://www.transparenttextures.com/patterns/old-paper.png');
-            pointer-events: none;
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--gold);
         }
-        /* 选项交互动画 */
-        .option-card {
-            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-            border: 1px solid rgba(212, 175, 55, 0.2);
-        }
-        /* 适配手机端，按下时有明显的反馈 */
-        .option-card:active {
-            transform: scale(0.96);
-            background: rgba(212, 175, 55, 0.15);
-        }
-        .fade-enter-active, .fade-leave-active {
-            transition: opacity 0.4s ease, transform 0.4s ease;
-        }
-        .fade-enter-from { opacity: 0; transform: translateX(10px); }
-        .fade-leave-to { opacity: 0; transform: translateX(-10px); }
+        .frame-ornament::before { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+        .frame-ornament::after { bottom: 0; right: 0; border-left: 0; border-top: 0; }
 
-        .btn-shadow {
-            box-shadow: 0 4px 14px 0 rgba(139, 94, 60, 0.3);
+        /* 选项交互 */
+        .option-item {
+            background: rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(179, 139, 77, 0.2);
+            transition: all 0.4s ease;
+            cursor: pointer;
         }
+        .option-item:active {
+            background: rgba(179, 139, 77, 0.15);
+            transform: scale(0.98);
+        }
+
+        /* 渐变分割线 */
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--gold), transparent);
+            margin: 2rem auto;
+            width: 60%;
+            position: relative;
+        }
+        .divider::after {
+            content: "◈";
+            position: absolute;
+            left: 50%; top: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--paper-light);
+            padding: 0 10px;
+            font-size: 10px;
+            color: var(--gold);
+        }
+
+        .btn-classic {
+            background: var(--accent);
+            color: #fff;
+            letter-spacing: 0.2em;
+            box-shadow: 0 4px 15px rgba(74, 55, 40, 0.2);
+        }
+
+        /* 动画 */
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.8s ease, transform 0.8s ease; }
+        .fade-enter-from { opacity: 0; transform: translateY(10px); }
+        .fade-leave-to { opacity: 0; transform: translateY(-10px); }
+
+        .text-justified { text-align: justify; text-justify: inter-character; }
     </style>
 </head>
-<body class="paper-bg min-h-screen flex items-center justify-center p-4">
+<body>
+    <div class="texture-bg"></div>
 
-    <div id="app" class="max-w-2xl w-full z-10">
+    <div id="app" class="max-w-xl w-full mx-auto px-6 py-12 min-h-screen flex items-center justify-center">
         <transition name="fade" mode="out-in">
-            <!-- 1. 封面页 -->
-            <div v-if="step === 'start'" key="start" class="text-center space-y-8 p-6">
-                <h1 class="text-4xl font-bold leading-tight tracking-widest text-[#8b5e3c]">
-                    与你灵魂共鸣的<br>「内在女神」
-                </h1>
-                <p class="text-lg opacity-80 leading-relaxed italic">
-                    "When the goddess within whispers,<br>will you hear her?"
-                </p>
-                <div class="h-px w-24 bg-[#d4af37] mx-auto"></div>
-                <p class="text-sm leading-7 max-w-xs mx-auto opacity-70">
-                    在每个女孩心底，都住着一位古老的女神。通过这段旅程，触碰你最深处的性格原型。
-                </p>
-                <button @click="step = 'quiz'" class="mt-8 px-14 py-4 bg-[#8b5e3c] text-white rounded-full btn-shadow transition-transform active:scale-90 tracking-widest font-bold">
+            
+            <!-- 1. 封面页 (图一内容) -->
+            <div v-if="step === 'start'" key="start" class="text-center space-y-8 frame-ornament">
+                <div class="space-y-2 mb-10">
+                    <h1 class="text-3xl font-bold tracking-[0.2em] text-[#4a3728]">内在女神原型测试</h1>
+                    <p class="text-[10px] opacity-50 uppercase tracking-[0.5em]">The Goddess Within</p>
+                </div>
+
+                <div class="space-y-6 text-[15px] text-[#5a4a3a] leading-relaxed text-justified px-2">
+                    <p>在每个女孩心底，都住着一位古老的女神。她不一定会被清晰地看见，却在悄悄影响着你的直觉、选择、关系模式、情绪反应——甚至决定你“为什么是现在的你”。</p>
+                    <p>这份女神原型测试并不是为了把你“分成哪一类”，而是为了揭示你体内正在发声的神性力量。</p>
+                    <p>当你开始答题时，你其实是在穿越一段象征性的旅程：森林、小屋、月光、风、火焰、影子……它们会引导你触碰自己最深处的性格原型。</p>
+                    <div class="divider"></div>
+                    <p class="italic opacity-80 text-center">请凭第一直觉作答。<br>答案无所谓好坏，只是指向你灵魂的方向。</p>
+                    <p class="text-center font-bold mt-4">现在，放松下来，让你的内在女神轻轻伸出手。<br>她正等着你。</p>
+                </div>
+
+                <button @click="step = 'quiz'" class="btn-classic mt-8 px-12 py-4 rounded-full text-sm font-bold transition-transform active:scale-95">
                     开启旅程
                 </button>
             </div>
 
             <!-- 2. 测试页 -->
-            <div v-else-if="step === 'quiz'" key="quiz" class="space-y-6">
-                <!-- 顶部导航 -->
-                <div class="flex justify-between items-center px-1">
-                    <button @click="goBack" v-if="currentIndex > 0" class="text-[#8b5e3c] text-sm flex items-center opacity-70 hover:opacity-100 transition-opacity">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                        上一题
+            <div v-else-if="step === 'quiz'" key="quiz" class="w-full space-y-8">
+                <div class="flex justify-between items-center text-[10px] tracking-[0.2em] opacity-50 mb-2">
+                    <button @click="goBack" v-if="currentIndex > 0" class="flex items-center">
+                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"></path></svg> 返回
                     </button>
-                    <span v-else></span> <!-- 占位 -->
-                    <span class="text-[10px] uppercase tracking-widest opacity-40 font-bold">Quest {{ currentIndex + 1 }} / 12</span>
-                </div>
-
-                <!-- 进度条 -->
-                <div class="w-full h-1 bg-black/5 rounded-full overflow-hidden">
-                    <div class="h-full bg-[#d4af37] transition-all duration-700" :style="{width: ((currentIndex+1)/12)*100 + '%'}"></div>
+                    <div v-else></div>
+                    <span>第 {{ currentIndex + 1 }} 章节 / 12</span>
                 </div>
                 
-                <h2 class="text-xl md:text-2xl font-bold text-[#4a3728] leading-snug px-1">
+                <div class="w-full h-[1px] bg-[#b38b4d]/20 mb-10">
+                    <div class="h-full bg-[#b38b4d] transition-all duration-500" :style="{width: ((currentIndex+1)/12)*100 + '%'}"></div>
+                </div>
+
+                <h2 class="text-xl md:text-2xl font-bold text-[#4a3728] leading-snug">
                     {{ questions[currentIndex].title }}
                 </h2>
 
-                <div class="grid gap-3 pt-4">
+                <div class="grid gap-3 pt-6">
                     <div v-for="(opt, key) in questions[currentIndex].options" 
                          :key="key" 
                          @click="handleSelect(key)"
-                         class="option-card p-4 rounded-2xl bg-white/50 cursor-pointer flex items-center">
-                        <span class="w-7 h-7 flex-shrink-0 flex items-center justify-center rounded-full border border-[#d4af37]/40 mr-4 text-xs text-[#8b5e3c] font-bold">
+                         class="option-item p-5 rounded-xl flex items-center group">
+                        <span class="w-6 h-6 flex-shrink-0 flex items-center justify-center rounded-full border border-[#b38b4d]/40 mr-4 text-[10px] text-[#b38b4d] font-bold group-hover:bg-[#b38b4d] group-hover:text-white transition-all">
                             {{ key }}
                         </span>
-                        <span class="text-md leading-tight">{{ opt }}</span>
+                        <span class="text-[15px] opacity-90">{{ opt }}</span>
                     </div>
                 </div>
             </div>
 
-            <!-- 3. 结果页 (保持不变，仅优化移动端间距) -->
-            <div v-else-if="step === 'result'" key="result" class="bg-white/70 backdrop-blur-md p-6 md:p-10 rounded-3xl shadow-2xl border border-white/50 mx-2">
-                <div class="text-center mb-6">
-                    <span class="text-[#d4af37] tracking-[0.3em] font-bold text-xs">你的内在女神是</span>
-                    <h2 class="text-3xl font-bold mt-2 text-[#8b5e3c] tracking-widest">{{ resultData.name }}</h2>
-                    <p class="text-[10px] opacity-50 mt-1 uppercase tracking-widest font-bold">{{ resultData.engName }}</p>
+            <!-- 3. 过渡准备页 (图二内容) -->
+            <div v-else-if="step === 'preparing'" key="preparing" class="text-center space-y-8 py-10">
+                <div class="divider"></div>
+                <div class="space-y-8 text-[15px] leading-loose text-[#5a4a3a] px-4 text-justified">
+                    <p>每一种原型都代表一种天赋：直觉、关怀、重生、创造、力量、自由……它们并不是外在的标签，而是你内在正在觉醒的能量。</p>
+                    <p>如果你出现并列——那说明你体内拥有双重或多重女神力量。你可以结合生活现状，看看谁与你最共振。</p>
+                    <div class="space-y-2 py-4">
+                        <p class="text-lg font-bold text-[#4a3728] text-center">请记住：</p>
+                        <p class="text-center">你不是“成为某位女神”，<br>而是——<br><span class="text-accent font-bold">你的内在女神在今天被重新看见了。</span></p>
+                    </div>
                 </div>
+                <button @click="step = 'result'" class="btn-classic px-14 py-4 rounded-full text-sm font-bold animate-pulse">
+                    揭晓神性原型
+                </button>
+            </div>
+
+            <!-- 4. 结果页 -->
+            <div v-else-if="step === 'result'" key="result" class="w-full space-y-8 text-center">
+                <div class="space-y-2">
+                    <p class="text-xs tracking-[0.4em] opacity-60">唤醒的内在神性是</p>
+                    <h2 class="text-4xl font-bold text-[#8b5e3c] tracking-[0.2em]">{{ resultData.name }}</h2>
+                    <p class="text-[10px] opacity-40 tracking-[0.3em] font-light uppercase">{{ resultData.engName }}</p>
+                </div>
+
+                <div class="divider"></div>
                 
-                <div class="space-y-5 text-[#4a3728]">
-                    <div class="bg-white/60 p-5 rounded-2xl border border-[#d4af37]/10">
-                        <h3 class="text-xs font-bold border-b border-[#d4af37]/30 pb-2 mb-3 inline-block tracking-tighter">内在底色</h3>
-                        <p class="leading-relaxed text-sm opacity-90 text-justify">{{ resultData.desc }}</p>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-[#8b5e3c]/5 p-4 rounded-xl">
-                            <h4 class="text-[11px] font-bold text-[#8b5e3c] mb-2">✦ 神性天赋</h4>
-                            <ul class="text-[13px] space-y-1 opacity-80">
-                                <li v-for="t in resultData.talents">• {{ t }}</li>
-                            </ul>
-                        </div>
-                        <div class="bg-[#d4af37]/5 p-4 rounded-xl">
-                            <h4 class="text-[11px] font-bold text-[#d4af37] mb-2">✦ 象征元素</h4>
-                            <p class="text-[12px] leading-relaxed opacity-80">
-                                颜色：{{ resultData.elements.color }}<br>
-                                植物：{{ resultData.elements.plant }}<br>
-                                水晶：{{ resultData.elements.crystal }}
-                            </p>
-                        </div>
-                    </div>
-
-                    <button @click="reset" class="w-full py-4 mt-4 text-[11px] font-bold tracking-[0.2em] border border-[#8b5e3c]/30 rounded-full hover:bg-[#8b5e3c] hover:text-white transition-all active:scale-95">
-                        重新开启灵魂探索
-                    </button>
+                <div class="bg-white/30 p-8 rounded-2xl border border-[#b38b4d]/10 text-justified">
+                    <h3 class="text-xs font-bold text-[#b38b4d] mb-4 tracking-widest">【 灵魂底色 】</h3>
+                    <p class="text-sm leading-relaxed text-slate-700">{{ resultData.desc }}</p>
                 </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                    <div class="p-5 border border-[#b38b4d]/10 rounded-xl bg-white/20">
+                        <h4 class="text-[11px] font-bold text-[#8b5e3c] mb-3">✦ 神性天赋</h4>
+                        <ul class="text-xs space-y-2 opacity-80">
+                            <li v-for="t in resultData.talents" class="flex items-center">
+                                <span class="w-1 h-1 bg-[#b38b4d] rounded-full mr-2"></span> {{ t }}
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="p-5 border border-[#b38b4d]/10 rounded-xl bg-white/20">
+                        <h4 class="text-[11px] font-bold text-[#8b5e3c] mb-3">✦ 象征元素</h4>
+                        <div class="text-[11px] leading-6 opacity-70">
+                            色彩：{{ resultData.elements.color }}<br>
+                            植物：{{ resultData.elements.plant }}<br>
+                            水晶：{{ resultData.elements.crystal }}
+                        </div>
+                    </div>
+                </div>
+
+                <button @click="reset" class="text-[10px] font-bold tracking-[0.3em] opacity-40 hover:opacity-100 transition-opacity pt-10 uppercase">
+                    — 重新审视灵魂 —
+                </button>
             </div>
         </transition>
     </div>
@@ -152,8 +220,8 @@
                 const step = ref('start');
                 const currentIndex = ref(0);
                 const scores = ref({ A: 0, B: 0, C: 0, D: 0, E: 0, F: 0 });
-                const choiceHistory = ref([]); // 记录每一步的选择，用于回退
-                const isClickLocked = ref(false); // 点击锁，防止连点
+                const choiceHistory = ref([]);
+                const isClickLocked = ref(false);
 
                 const questions = [
                     { title: "夜色降临，你推开一间静谧的木屋。圆桌上放着三件物品，你最先被哪个吸引？", options: { A: "月桂叶", B: "小油灯", C: "麦穗", D: "玫瑰花", E: "黑色羽毛", F: "刻纹石片" } },
@@ -180,32 +248,28 @@
                 };
 
                 const handleSelect = (key) => {
-                    if (isClickLocked.value) return; // 如果在保护期，直接返回
-                    
+                    if (isClickLocked.value) return;
                     isClickLocked.value = true;
                     scores.value[key]++;
                     choiceHistory.value.push(key);
                     
-                    if (currentIndex.value < 11) {
-                        setTimeout(() => {
+                    setTimeout(() => {
+                        if (currentIndex.value < 11) {
                             currentIndex.value++;
-                            isClickLocked.value = false; // 切换完成后解锁
-                            window.scrollTo(0, 0); // 每一题自动回顶，防止位置错乱
-                        }, 300); // 300ms的平滑过渡保护
-                    } else {
-                        setTimeout(() => {
-                            step.value = 'result';
                             isClickLocked.value = false;
-                        }, 300);
-                    }
+                        } else {
+                            step.value = 'preparing'; // 跳转到过渡页
+                            isClickLocked.value = false;
+                        }
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }, 400);
                 };
 
                 const goBack = () => {
                     if (currentIndex.value > 0) {
                         const lastKey = choiceHistory.value.pop();
-                        scores.value[lastKey]--; // 减去最后一次选的分
+                        scores.value[lastKey]--;
                         currentIndex.value--;
-                        window.scrollTo(0, 0);
                     }
                 };
 
