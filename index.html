@@ -6,195 +6,183 @@
     <title>内在女神原型测试</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;600;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --paper-dark: #e8d5b7;
-            --ink: #3a2e24;
+            --paper-light: #fdf6e3;
+            --ink: #2d241c;
             --gold: #b38b4d;
             --accent: #8b5e3c;
         }
 
-        /* 基础锁定，禁止滚动 */
+        /* 基础锁定 */
         html, body {
             height: 100%; width: 100%; overflow: hidden;
-            position: fixed; background-color: var(--paper-dark);
+            position: fixed; background-color: #e8d5b7;
             font-family: 'Noto Serif SC', serif; color: var(--ink);
         }
 
-        /* 背景图 bj.png 优化：四周模糊，中间清晰 */
+        /* 背景图：鲜艳化处理 */
         .bj-background {
             position: fixed; inset: 0; z-index: -2;
             background: url('bj.png') center center / cover no-repeat;
-            filter: grayscale(0.4) brightness(0.7); /* 变灰变暗 */
-        }
-        .bj-overlay {
-            position: fixed; inset: 0; z-index: -1;
-            backdrop-filter: blur(8px); /* 四周模糊 */
-            mask-image: radial-gradient(circle, transparent 10%, black 90%);
-            -webkit-mask-image: radial-gradient(circle, transparent 10%, black 90%);
+            filter: brightness(0.85) contrast(1.1); /* 还原色彩，适度提亮对比 */
         }
 
-        /* 装饰图：优化比例，防止遮挡文字 */
+        /* 全局入场动效：从中间扩散显现 */
+        .entrance-fade {
+            animation: entrance-zoom 1.5s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+        }
+        @keyframes entrance-zoom {
+            0% { transform: scale(0.92); opacity: 0; filter: blur(10px); }
+            100% { transform: scale(1); opacity: 1; filter: blur(0); }
+        }
+
+        /* 装饰图：优化比例 */
         .decor-img {
-            position: fixed; width: 35vw; max-width: 220px;
-            z-index: 50; transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+            position: fixed; width: 32vw; max-width: 180px;
+            z-index: 50; transition: all 1s ease;
             pointer-events: none;
         }
         .img-top-left { top: 0; left: 0; }
         .img-bottom-right { bottom: 0; right: 0; }
-
-        /* 飞散动画 */
         .scatter-tl { transform: translate(-100%, -100%) rotate(-20deg); opacity: 0; }
         .scatter-br { transform: translate(100%, 100%) rotate(20deg); opacity: 0; }
 
-        /* 内容布局：解决手机遮挡 */
-        .app-container {
-            height: 100dvh; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            padding: 0 1.5rem; text-align: center;
+        /* 内容底盘：增加文字识别度 */
+        .content-plate {
+            background: rgba(253, 246, 227, 0.75); /* 半透明纸张感 */
+            backdrop-filter: blur(5px);
+            padding: 1.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid rgba(179, 139, 77, 0.2);
+            width: 100%; max-width: 400px;
+            z-index: 10;
         }
 
-        .text-content {
-            width: 100%; max-width: 450px; z-index: 10;
-            display: flex; flex-direction: column; gap: 0.8rem;
-        }
+        .text-content { display: flex; flex-direction: column; gap: 0.6rem; }
 
-        /* 文字排版优化：紧凑、清晰 */
+        /* 文字样式：更清晰、突出 */
         .para {
-            font-size: 14px; line-height: 1.6; /* 降低行间距 */
-            opacity: 0.9; text-align: justify;
-            text-shadow: 0 1px 2px rgba(255,255,255,0.2);
+            font-size: 14px; line-height: 1.5; font-weight: 500;
+            text-align: justify; color: var(--ink);
         }
         .highlight-text {
-            font-size: 18px; font-weight: 900;
-            margin: 0.5rem 0; letter-spacing: 0.1em;
+            font-size: 1.2rem; font-weight: 900;
+            margin-top: 0.5rem; color: var(--accent);
+            letter-spacing: 0.1em;
         }
 
-        .divider {
-            height: 1px; background: linear-gradient(to right, transparent, var(--gold), transparent);
-            margin: 1rem auto; width: 50%; position: relative;
-        }
-        .divider::after {
-            content: "◈"; position: absolute; left: 50%; top: 50%;
-            transform: translate(-50%, -50%); background: #ede3d1;
-            padding: 0 8px; font-size: 10px; color: var(--gold);
-        }
-
-        /* 圆球动画 */
+        /* 圆球区域 */
         .qiu-container {
-            position: relative; width: 140px; height: 140px; margin: 0.5rem auto;
+            position: relative; width: 130px; height: 130px; margin: 0.5rem auto;
         }
         .qiu-img {
             width: 100%; height: 100%; transition: all 1.2s cubic-bezier(0.7, 0, 0.3, 1);
             animation: rotate-qiu 20s linear infinite;
         }
         @keyframes rotate-qiu { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .qiu-zoom { transform: scale(15); opacity: 0; filter: blur(10px); }
+        .qiu-zoom { transform: scale(15); opacity: 0; filter: blur(15px); }
 
-        /* 按钮：更突出的格式 */
+        /* 按钮：好看的样式 */
         .btn-start {
-            background: linear-gradient(135deg, #8b5e3c, #5a3d28);
-            color: #fdf6e3; padding: 0.8rem 3rem; border-radius: 50px;
-            font-size: 1rem; font-weight: 600; letter-spacing: 0.4em;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.1);
-            margin-top: 1rem; position: relative; z-index: 60;
+            background: linear-gradient(145deg, #a37a5d, #8b5e3c);
+            color: #fff; padding: 0.8rem 3.5rem; border-radius: 50px;
+            font-size: 1.1rem; font-weight: 700; letter-spacing: 0.3em;
+            box-shadow: 0 8px 20px rgba(139, 94, 60, 0.4);
+            transition: all 0.3s; margin-top: 0.5rem;
         }
 
-        /* 走路动画过渡页 */
+        /* 过渡页：小人动画 */
         .loading-screen {
-            position: fixed; inset: 0; background: var(--paper-dark);
+            position: fixed; inset: 0; background: #ede3d1;
             z-index: 100; display: flex; flex-direction: column;
             align-items: center; justify-content: center;
         }
-        .walking-video { width: 150px; mix-blend-mode: multiply; }
+        .walking-video { width: 160px; mix-blend-mode: multiply; }
 
-        /* 问卷页滚动 */
-        .scroll-page { overflow-y: auto !important; position: relative !important; height: auto !important; }
-
+        /* Vue 切换 */
         .fade-enter-active, .fade-leave-active { transition: opacity 0.8s ease; }
         .fade-enter-from, .fade-leave-to { opacity: 0; }
+        
+        .scroll-page { overflow-y: auto !important; position: relative !important; height: auto !important; }
     </style>
 </head>
 <body>
     <div class="bj-background"></div>
-    <div class="bj-overlay"></div>
 
-    <div id="app">
+    <div id="app" v-cloak>
         <transition name="fade" mode="out-in">
             
             <!-- 1. 封面页 -->
-            <div v-if="step === 'start'" key="start" class="app-container">
+            <div v-if="step === 'start'" key="start" class="h-[100dvh] flex items-center justify-center p-6 entrance-fade">
                 <img src="left-top.png" :class="['decor-img img-top-left', { 'scatter-tl': isLeaving }]">
                 <img src="right-bottom.png" :class="['decor-img img-bottom-right', { 'scatter-br': isLeaving }]">
 
-                <div class="text-content">
-                    <p class="text-[10px] tracking-[0.6em] opacity-40 mb-4">THE GODDESS WITHIN</p>
+                <div class="content-plate">
+                    <div class="text-content">
+                        <p class="text-[9px] tracking-[0.5em] opacity-40 text-center mb-1">THE GODDESS WITHIN</p>
+                        
+                        <p class="para">在你的心底，住着一位古老的女神。她悄悄影响着你的直觉、选择、关系模式、情绪反应——甚至决定你“为什么是现在的你”。</p>
+                        
+                        <p class="para">这份测试并不是为了把你“分成哪一类”，而是为了启动你内在的神性力量。让我们一起穿越这段旅程，触碰你最深处的性格原型。</p>
 
-                    <p class="para">在你的心底，住着一位古老的女神。她悄悄影响着你的直觉、选择、关系模式、情绪反应——甚至决定你“为什么是现在的你”。</p>
-                    
-                    <p class="para">这份女神原型测试并不是为了把你“分成哪一类”，而是为了启动你内在的神性力量。</p>
+                        <p class="text-center text-xs font-bold opacity-60">请凭第一直觉作答。答案指向灵魂的方向。</p>
 
-                    <p class="para">让我们一起穿越这段旅程，它会引导你触碰自己最深处的性格原型。</p>
+                        <!-- 球体 -->
+                        <div class="qiu-container">
+                            <img src="qiu.png" :class="['qiu-img', { 'qiu-zoom': isLeaving }]">
+                        </div>
 
-                    <div class="divider"></div>
+                        <div class="highlight-text">
+                            现在 放松下来<br>她正等着你
+                        </div>
 
-                    <p class="text-[13px] opacity-70">请凭第一直觉作答。答案没有好坏，只是指向你灵魂的方向。</p>
-
-                    <!-- 球体 -->
-                    <div class="qiu-container">
-                        <img src="qiu.png" :class="['qiu-img', { 'qiu-zoom': isLeaving }]">
-                    </div>
-
-                    <div class="highlight-text">
-                        现在 放松下来<br>她正等着你
-                    </div>
-
-                    <div class="flex justify-center">
-                        <button @click="triggerJourney" class="btn-start">
-                            开启旅程
-                        </button>
+                        <div class="flex justify-center">
+                            <button @click="triggerJourney" class="btn-start">
+                                开启旅程
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 2. 中间走路过渡动画 -->
+            <!-- 2. 过渡页：走路动画加长 -->
             <div v-else-if="step === 'walking'" key="walking" class="loading-screen">
                 <video class="walking-video" autoplay loop muted playsinline>
                     <source src="zoulu.mp4" type="video/mp4">
                 </video>
-                <p class="mt-4 text-xs tracking-widest opacity-40 animate-pulse">正在进入内在森林...</p>
+                <p class="mt-4 text-xs tracking-widest opacity-40 animate-pulse">正在唤醒内在神性...</p>
             </div>
 
             <!-- 3. 测试页 -->
-            <div v-else-if="step === 'quiz'" key="quiz" class="app-container scroll-page py-10">
-                <div class="w-full max-w-md">
+            <div v-else-if="step === 'quiz'" key="quiz" class="h-[100dvh] flex flex-col items-center justify-center p-6 scroll-page">
+                <div class="w-full max-w-md bg-white/60 p-6 rounded-3xl">
                     <div class="flex justify-between text-[10px] opacity-40 mb-4">
                         <button @click="goBack" v-if="currentIndex > 0">返回</button>
                         <span>{{ currentIndex + 1 }} / 12</span>
                     </div>
-                    <h2 class="text-xl font-bold mb-8 leading-snug">{{ questions[currentIndex].title }}</h2>
+                    <h2 class="text-lg font-bold mb-6 text-center leading-snug">{{ questions[currentIndex].title }}</h2>
                     <div class="grid gap-3">
                         <div v-for="(opt, key) in questions[currentIndex].options" 
                              @click="handleSelect(key)"
-                             class="p-5 bg-white/40 border border-amber-900/5 rounded-2xl text-left cursor-pointer active:bg-white/60 transition-all">
-                            <span class="font-bold mr-3 opacity-30">{{ key }}</span> {{ opt }}
+                             class="p-4 bg-white/80 rounded-2xl text-sm border border-amber-900/5 active:bg-amber-100 transition-all">
+                            <span class="font-bold mr-2 text-amber-800/40">{{ key }}</span> {{ opt }}
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- 4. 结果页 -->
-            <div v-else-if="step === 'result'" key="result" class="app-container scroll-page py-10">
-                <div class="w-full max-w-md">
-                    <p class="text-xs tracking-widest opacity-40 mb-2">唤醒的内在神性是</p>
-                    <h2 class="text-4xl font-bold text-[#8b5e3c] tracking-widest mb-10">{{ resultData.name }}</h2>
-                    <div class="divider"></div>
-                    <div class="bg-white/40 p-8 rounded-3xl text-justify text-[15px] leading-loose">
+            <div v-else-if="step === 'result'" key="result" class="h-[100dvh] flex flex-col items-center justify-center p-6 scroll-page">
+                <div class="w-full max-w-md text-center">
+                    <p class="text-[10px] tracking-widest opacity-40 mb-2">唤醒的内在神性是</p>
+                    <h2 class="text-4xl font-bold text-[#8b5e3c] tracking-widest mb-8">{{ resultData.name }}</h2>
+                    <div class="bg-white/60 p-8 rounded-3xl text-justify text-sm leading-loose">
                         {{ resultData.desc }}
                     </div>
-                    <button @click="reset" class="mt-16 text-[10px] opacity-30 uppercase tracking-widest">—— 重新开启旅程 ——</button>
+                    <button @click="reset" class="mt-12 text-[10px] opacity-30 tracking-widest uppercase">—— 重新开启旅程 ——</button>
                 </div>
             </div>
 
@@ -213,14 +201,13 @@
 
                 const triggerJourney = () => {
                     isLeaving.value = true;
-                    // 第一阶段：封面飞散动画 (1秒)
                     setTimeout(() => {
                         step.value = 'walking';
-                        // 第二阶段：走路动画 (2.5秒)
+                        // 动画时长改为 4秒，预留加载缓冲
                         setTimeout(() => {
                             step.value = 'quiz';
-                        }, 2500);
-                    }, 1000);
+                        }, 4000);
+                    }, 1100);
                 };
 
                 const handleSelect = (key) => {
