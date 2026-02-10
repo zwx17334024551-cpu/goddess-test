@@ -10,162 +10,116 @@
     <style>
         :root {
             --paper-dark: #e8d5b7;
-            --paper-light: #fdf6e3;
-            --ink: #4a3728;
+            --ink: #3a2e24;
             --gold: #b38b4d;
+            --accent: #8b5e3c;
         }
 
-        /* 强制锁定屏幕，禁止滚动 */
+        /* 基础锁定，禁止滚动 */
         html, body {
-            height: 100%;
-            width: 100%;
-            overflow: hidden;
-            position: fixed;
-            background-color: var(--paper-dark);
-            font-family: 'Noto Serif SC', serif;
-            color: var(--ink);
-            overscroll-behavior: none;
+            height: 100%; width: 100%; overflow: hidden;
+            position: fixed; background-color: var(--paper-dark);
+            font-family: 'Noto Serif SC', serif; color: var(--ink);
         }
 
-        .texture-bg {
-            position: fixed;
-            inset: 0;
-            z-index: -1;
-            background: 
-                radial-gradient(circle at center, rgba(253, 246, 227, 0.8) 0%, rgba(232, 213, 183, 0.9) 100%),
-                url('https://www.transparenttextures.com/patterns/paper-fibers.png');
-            opacity: 0.8;
+        /* 背景图 bj.png 优化：四周模糊，中间清晰 */
+        .bj-background {
+            position: fixed; inset: 0; z-index: -2;
+            background: url('bj.png') center center / cover no-repeat;
+            filter: grayscale(0.4) brightness(0.7); /* 变灰变暗 */
+        }
+        .bj-overlay {
+            position: fixed; inset: 0; z-index: -1;
+            backdrop-filter: blur(8px); /* 四周模糊 */
+            mask-image: radial-gradient(circle, transparent 10%, black 90%);
+            -webkit-mask-image: radial-gradient(circle, transparent 10%, black 90%);
         }
 
-        /* 装饰图定位 - 复刻精美版面 */
+        /* 装饰图：优化比例，防止遮挡文字 */
         .decor-img {
-            position: fixed;
-            width: 45vw;
-            max-width: 300px;
-            z-index: 50;
-            transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: fixed; width: 35vw; max-width: 220px;
+            z-index: 50; transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
             pointer-events: none;
         }
-        .img-top-left { top: -2%; left: -2%; }
-        .img-bottom-right { bottom: -2%; right: -2%; }
+        .img-top-left { top: 0; left: 0; }
+        .img-bottom-right { bottom: 0; right: 0; }
 
-        /* 点击分散动画 */
-        .scatter-tl { transform: translate(-120%, -120%) rotate(-30deg); opacity: 0; }
-        .scatter-br { transform: translate(120%, 120%) rotate(30deg); opacity: 0; }
+        /* 飞散动画 */
+        .scatter-tl { transform: translate(-100%, -100%) rotate(-20deg); opacity: 0; }
+        .scatter-br { transform: translate(100%, 100%) rotate(20deg); opacity: 0; }
 
-        /* 主容器：强制铺满屏幕，内容居中 */
+        /* 内容布局：解决手机遮挡 */
         .app-container {
-            height: 100dvh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-            text-align: center;
+            height: 100dvh; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 0 1.5rem; text-align: center;
         }
 
         .text-content {
-            width: 100%;
-            max-width: 500px;
-            z-index: 10;
+            width: 100%; max-width: 450px; z-index: 10;
+            display: flex; flex-direction: column; gap: 0.8rem;
         }
 
-        /* 标题文字样式 */
-        .title-eng {
-            font-size: 10px;
-            letter-spacing: 0.6em;
-            opacity: 0.4;
-            margin-bottom: 2.5rem;
-            text-transform: uppercase;
-        }
-
-        /* 段落文字样式 */
+        /* 文字排版优化：紧凑、清晰 */
         .para {
-            font-size: 15px;
-            line-height: 2;
-            margin-bottom: 1.8rem;
-            opacity: 0.8;
-            text-align: justify;
+            font-size: 14px; line-height: 1.6; /* 降低行间距 */
+            opacity: 0.9; text-align: justify;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.2);
+        }
+        .highlight-text {
+            font-size: 18px; font-weight: 900;
+            margin: 0.5rem 0; letter-spacing: 0.1em;
         }
 
-        /* 分割线样式 */
         .divider {
-            height: 1px;
-            background: linear-gradient(to right, transparent, var(--gold), transparent);
-            margin: 2rem auto;
-            width: 40%;
-            position: relative;
+            height: 1px; background: linear-gradient(to right, transparent, var(--gold), transparent);
+            margin: 1rem auto; width: 50%; position: relative;
         }
         .divider::after {
-            content: "◈";
-            position: absolute;
-            left: 50%; top: 50%;
-            transform: translate(-50%, -50%);
-            background: #f1e7d4;
-            padding: 0 8px;
-            font-size: 10px;
-            color: var(--gold);
+            content: "◈"; position: absolute; left: 50%; top: 50%;
+            transform: translate(-50%, -50%); background: #ede3d1;
+            padding: 0 8px; font-size: 10px; color: var(--gold);
         }
 
-        /* 球体与人物区 */
-        .visual-area {
-            position: relative;
-            width: 100%;
-            height: 160px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 1rem 0;
+        /* 圆球动画 */
+        .qiu-container {
+            position: relative; width: 140px; height: 140px; margin: 0.5rem auto;
         }
-        .qiu-base {
-            position: absolute;
-            width: 180px;
-            height: 180px;
+        .qiu-img {
+            width: 100%; height: 100%; transition: all 1.2s cubic-bezier(0.7, 0, 0.3, 1);
             animation: rotate-qiu 20s linear infinite;
-            transition: all 1.2s cubic-bezier(0.7, 0, 0.3, 1);
         }
-        @keyframes rotate-qiu {
-            from { transform: rotate(0deg); } to { transform: rotate(360deg); }
-        }
-        .qiu-travel {
-            transform: scale(20) translateY(-20%) !important;
-            filter: blur(10px);
-            opacity: 0;
+        @keyframes rotate-qiu { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .qiu-zoom { transform: scale(15); opacity: 0; filter: blur(10px); }
+
+        /* 按钮：更突出的格式 */
+        .btn-start {
+            background: linear-gradient(135deg, #8b5e3c, #5a3d28);
+            color: #fdf6e3; padding: 0.8rem 3rem; border-radius: 50px;
+            font-size: 1rem; font-weight: 600; letter-spacing: 0.4em;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            margin-top: 1rem; position: relative; z-index: 60;
         }
 
-        .walking-video {
-            width: 100px;
-            z-index: 5;
-            mix-blend-mode: multiply;
+        /* 走路动画过渡页 */
+        .loading-screen {
+            position: fixed; inset: 0; background: var(--paper-dark);
+            z-index: 100; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
         }
+        .walking-video { width: 150px; mix-blend-mode: multiply; }
 
-        /* 按钮样式 */
-        .btn-classic {
-            background: #8b5e3c;
-            color: white;
-            padding: 0.9rem 3.5rem;
-            border-radius: 999px;
-            font-size: 1rem;
-            letter-spacing: 0.2em;
-            box-shadow: 0 8px 15px rgba(139, 94, 60, 0.2);
-            transition: all 0.3s;
-            z-index: 60;
-        }
+        /* 问卷页滚动 */
+        .scroll-page { overflow-y: auto !important; position: relative !important; height: auto !important; }
 
-        .fade-enter-active, .fade-leave-active { transition: opacity 0.6s ease; }
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.8s ease; }
         .fade-enter-from, .fade-leave-to { opacity: 0; }
-
-        /* 选项列表特殊处理：允许测试页滚动，但封面页锁定 */
-        .scrollable-page {
-            overflow-y: auto !important;
-            position: relative !important;
-            height: auto !important;
-            max-height: 100%;
-        }
     </style>
 </head>
 <body>
-    <div class="texture-bg"></div>
+    <div class="bj-background"></div>
+    <div class="bj-overlay"></div>
 
     <div id="app">
         <transition name="fade" mode="out-in">
@@ -176,77 +130,71 @@
                 <img src="right-bottom.png" :class="['decor-img img-bottom-right', { 'scatter-br': isLeaving }]">
 
                 <div class="text-content">
-                    <p class="title-eng">THE GODDESS WITHIN</p>
+                    <p class="text-[10px] tracking-[0.6em] opacity-40 mb-4">THE GODDESS WITHIN</p>
 
-                    <div class="para">
-                        在你的心底，住着一位古老的女神。她悄悄影响着你的直觉、选择、关系模式、情绪反应——甚至决定你“为什么是现在的你”。
-                    </div>
+                    <p class="para">在你的心底，住着一位古老的女神。她悄悄影响着你的直觉、选择、关系模式、情绪反应——甚至决定你“为什么是现在的你”。</p>
                     
-                    <div class="para">
-                        这份女神原型测试并不是为了把你“分成哪一类”，而是为了启动你内在的神性力量。
-                    </div>
+                    <p class="para">这份女神原型测试并不是为了把你“分成哪一类”，而是为了启动你内在的神性力量。</p>
 
-                    <div class="para">
-                        让我们一起穿越这段旅程，它会引导你触碰自己最深处的性格原型。
-                    </div>
+                    <p class="para">让我们一起穿越这段旅程，它会引导你触碰自己最深处的性格原型。</p>
 
                     <div class="divider"></div>
 
-                    <div class="text-[14px] opacity-70 mb-2">请凭第一直觉作答。</div>
-                    <div class="text-[14px] opacity-70">答案没有好坏，只是指向你灵魂的方向。</div>
+                    <p class="text-[13px] opacity-70">请凭第一直觉作答。答案没有好坏，只是指向你灵魂的方向。</p>
 
-                    <!-- 动态视觉 -->
-                    <div class="visual-area">
-                        <img src="qiu.png" :class="['qiu-base', { 'qiu-travel': isLeaving }]">
-                        <video class="walking-video" autoplay loop muted playsinline>
-                            <source src="zoulu.mp4" type="video/mp4">
-                        </video>
+                    <!-- 球体 -->
+                    <div class="qiu-container">
+                        <img src="qiu.png" :class="['qiu-img', { 'qiu-zoom': isLeaving }]">
                     </div>
 
-                    <div class="mt-4 mb-8">
-                        <p class="text-lg font-bold">现在 放松下来</p>
-                        <p class="text-lg font-bold">她正等着你</p>
+                    <div class="highlight-text">
+                        现在 放松下来<br>她正等着你
                     </div>
 
-                    <button @click="startJourney" class="btn-classic">
-                        开启旅程
-                    </button>
+                    <div class="flex justify-center">
+                        <button @click="triggerJourney" class="btn-start">
+                            开启旅程
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- 2. 测试页 -->
-            <div v-else-if="step === 'quiz'" key="quiz" class="app-container scrollable-page">
-                <div class="w-full max-w-md space-y-6">
-                    <div class="flex justify-between text-[10px] opacity-40">
+            <!-- 2. 中间走路过渡动画 -->
+            <div v-else-if="step === 'walking'" key="walking" class="loading-screen">
+                <video class="walking-video" autoplay loop muted playsinline>
+                    <source src="zoulu.mp4" type="video/mp4">
+                </video>
+                <p class="mt-4 text-xs tracking-widest opacity-40 animate-pulse">正在进入内在森林...</p>
+            </div>
+
+            <!-- 3. 测试页 -->
+            <div v-else-if="step === 'quiz'" key="quiz" class="app-container scroll-page py-10">
+                <div class="w-full max-w-md">
+                    <div class="flex justify-between text-[10px] opacity-40 mb-4">
                         <button @click="goBack" v-if="currentIndex > 0">返回</button>
                         <span>{{ currentIndex + 1 }} / 12</span>
                     </div>
-                    <h2 class="text-xl font-bold leading-snug">{{ questions[currentIndex].title }}</h2>
+                    <h2 class="text-xl font-bold mb-8 leading-snug">{{ questions[currentIndex].title }}</h2>
                     <div class="grid gap-3">
                         <div v-for="(opt, key) in questions[currentIndex].options" 
                              @click="handleSelect(key)"
-                             class="p-4 bg-white/40 border border-amber-900/10 rounded-xl text-left cursor-pointer active:bg-amber-900/10">
-                            <span class="font-bold mr-2 text-amber-900/40">{{ key }}</span> {{ opt }}
+                             class="p-5 bg-white/40 border border-amber-900/5 rounded-2xl text-left cursor-pointer active:bg-white/60 transition-all">
+                            <span class="font-bold mr-3 opacity-30">{{ key }}</span> {{ opt }}
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 3. 过渡页 & 4. 结果页 (逻辑同前) -->
-            <div v-else-if="step === 'preparing'" key="preparing" class="app-container">
-                <p class="text-xl font-bold mb-8 text-center">你的内在女神<br>在今天被重新看见了。</p>
-                <button @click="step = 'result'" class="btn-classic">揭晓神性原型</button>
-            </div>
-
-            <div v-else-if="step === 'result'" key="result" class="app-container scrollable-page">
-                <div class="w-full max-w-md text-center py-10">
-                    <p class="text-xs tracking-widest opacity-50 mb-2">唤醒的内在神性是</p>
-                    <h2 class="text-4xl font-bold text-[#8b5e3c] tracking-widest mb-8">{{ resultData.name }}</h2>
+            <!-- 4. 结果页 -->
+            <div v-else-if="step === 'result'" key="result" class="app-container scroll-page py-10">
+                <div class="w-full max-w-md">
+                    <p class="text-xs tracking-widest opacity-40 mb-2">唤醒的内在神性是</p>
+                    <h2 class="text-4xl font-bold text-[#8b5e3c] tracking-widest mb-10">{{ resultData.name }}</h2>
                     <div class="divider"></div>
-                    <div class="bg-white/40 p-6 rounded-2xl text-justify text-sm leading-loose">
+                    <div class="bg-white/40 p-8 rounded-3xl text-justify text-[15px] leading-loose">
                         {{ resultData.desc }}
                     </div>
-                    <button @click="reset" class="mt-12 text-[10px] opacity-30 uppercase tracking-widest">— 重新审视灵魂 —</button>
+                    <button @click="reset" class="mt-16 text-[10px] opacity-30 uppercase tracking-widest">—— 重新开启旅程 ——</button>
                 </div>
             </div>
 
@@ -263,40 +211,23 @@
                 const scores = ref({ A: 0, B: 0, C: 0, D: 0, E: 0, F: 0 });
                 const choiceHistory = ref([]);
 
-                const questions = [
-                    { title: "夜色降临，你推开一间静谧的木屋。圆桌上放着三件物品，你最先被哪个吸引？", options: { A: "月桂叶", B: "小油灯", C: "麦穗", D: "玫瑰花", E: "黑色羽毛", F: "刻纹石片" } },
-                    { title: "你握起物品，眼前浮现一扇门。门外吹来阵阵风，你听见——", options: { A: "柔和的夜风吹动树叶", B: "温暖的晨风带甜味", C: "土壤湿润的气息", D: "轻轻的笑声与低语", E: "不知名的小声呢喃", F: "低沉而空旷的风鸣" } },
-                    { title: "走出门，你站在森林入口。你本能地朝哪边走？", options: { A: "月光照亮的小径", B: "晨光泛金的林间空地", C: "有鸟雀与草香的田边", D: "隐约听见歌声的花园", E: "有影子晃动的深林", F: "风声更狂烈的山崖边" } },
-                    { title: "继续前行，一种强烈的感觉浮现心头：", options: { A: "我要单独前进", B: "有人在温柔陪伴我", C: "想确认大家是否安全", D: "想探索新的东西，好兴奋", E: "我能感觉到隐藏的东西", F: "我知道我会经历转折" } },
-                    { title: "突然，一只动物出现在你面前。你觉得它想传达什么？", options: { A: "鹿：保持独立", B: "金翅鸟：轻盈与希望", C: "母狐：照顾好你的人", D: "猫：美与享受", E: "黑狗：看见门背后的事", F: "乌鸦：准备迎接变化" } },
-                    { title: "地面出现一个符号，你的第一反应是：", options: { A: "指引路线的标记", B: "温暖的祝福", C: "保护用的符咒", D: "美得像艺术作品", E: "某种古老知识", F: "界线与禁忌之符" } },
-                    { title: "不远处升起一股轻烟，你闻到的烟味像——", options: { A: "月桂等清冽草香", B: "金盏花与柑橘香", C: "小麦与木头的安稳味", D: "玫瑰与香脂的浪漫", E: "艾草与柏树的神秘", F: "烟熏木与深调草药" } },
-                    { title: "烟雾散去，一件仪式道具让你忍不住想触碰：", options: { A: "弯月形的弓", B: "金色缎带", C: "暖色陶碗", D: "手持铜镜", E: "三叉钥匙杖", F: "燃烧过的黑色羽毛" } },
-                    { title: "前方岔路有石碑，你选择哪一条？", options: { A: "自由之路", B: "希望之路", C: "丰盛之路", D: "创造之路", E: "洞察之路", F: "重生之路" } },
-                    { title: "你沿着路走，忽然听见一句低语：", options: { A: "你不需要别人批准", B: "一切都会好起来的", C: "他们需要你", D: "你值得被爱，也值得美", E: "看清它，你会明白", F: "痛苦是门，穿过去会更强" } },
-                    { title: "天空浮现一句话，让你最有共鸣的是：", options: { A: "保持方向", B: "保持温暖", C: "保持踏实", D: "保持欲望", E: "保持敏锐", F: "保持锋利" } },
-                    { title: "最后出现六扇门，你走进哪一扇？", options: { A: "月亮纹银白之门", B: "朝阳纹浅金之门", C: "麦穗纹暖黄之门", D: "玫瑰纹玫红之门", E: "钥匙纹墨蓝之门", F: "乌鸦纹深紫之门" } },
-                ];
-
-                const goddessData = {
-                    A: { name: "阿尔忒弥斯", desc: "内心像安静的林间月光。宁愿一个人思考、观察，也不愿被闹哄哄的人群裹挟。她对“自由”极度敏感。" },
-                    B: { name: "厄俄斯", desc: "内在像清晨柔软的阳光。天生带有一种“没关系，一切会好起来”的气质。对美好、浪漫非常敏感。" },
-                    C: { name: "得墨忒耳", desc: "内心像一片金色麦田，踏实温暖。比起惊天动地的大事，更关注三餐、安全感和日常细节。" },
-                    D: { name: "芙蕾雅", desc: "内心像一团火。对生命有强烈的热情，需要美、爱和感官享受来驱动自己。" },
-                    E: { name: "赫卡忒", desc: "内心像通往深处的小路。对气氛、能量和潜台词极度敏锐。陪伴他人度过痛苦的转折期。" },
-                    F: { name: "摩里甘", desc: "内心像乌云压顶前的风，强大而清醒。经历过人生变故，在“跌落-站起”中练就了惊人韧性。" }
-                };
-
-                const startJourney = () => {
+                const triggerJourney = () => {
                     isLeaving.value = true;
-                    setTimeout(() => { step.value = 'quiz'; }, 1100);
+                    // 第一阶段：封面飞散动画 (1秒)
+                    setTimeout(() => {
+                        step.value = 'walking';
+                        // 第二阶段：走路动画 (2.5秒)
+                        setTimeout(() => {
+                            step.value = 'quiz';
+                        }, 2500);
+                    }, 1000);
                 };
 
                 const handleSelect = (key) => {
                     scores.value[key]++;
                     choiceHistory.value.push(key);
                     if (currentIndex.value < 11) currentIndex.value++;
-                    else step.value = 'preparing';
+                    else step.value = 'result';
                 };
 
                 const goBack = () => {
@@ -304,12 +235,6 @@
                     scores.value[last]--;
                     currentIndex.value--;
                 };
-
-                const resultData = computed(() => {
-                    let maxKey = 'A';
-                    for (let key in scores.value) if (scores.value[key] > scores.value[maxKey]) maxKey = key;
-                    return goddessData[maxKey];
-                });
 
                 const reset = () => {
                     isLeaving.value = false;
@@ -319,7 +244,36 @@
                     Object.keys(scores.value).forEach(k => scores.value[k] = 0);
                 };
 
-                return { step, isLeaving, startJourney, currentIndex, questions, handleSelect, goBack, resultData, reset };
+                const resultData = computed(() => {
+                    let maxKey = 'A';
+                    for (let key in scores.value) if (scores.value[key] > scores.value[maxKey]) maxKey = key;
+                    const goddessData = {
+                        A: { name: "阿尔忒弥斯", desc: "你是独立的狩猎者，内心像月光下的森林一样清冷而自由。" },
+                        B: { name: "厄俄斯", desc: "你是黎明女神，天生带有疗愈他人的温暖能量，对美好事物极具感召力。" },
+                        C: { name: "得墨忒耳", desc: "你是大地之母，丰盛、踏实，是天生的照顾者与生命的守护者。" },
+                        D: { name: "芙蕾雅", desc: "你是爱与美的火，热情奔放，生命中不可缺少艺术、爱与感官的愉悦。" },
+                        E: { name: "赫卡忒", desc: "你是洞察者，穿梭于迷雾之间，拥有看穿台词背后的深度智慧。" },
+                        F: { name: "摩里甘", desc: "你是重生者，在风暴中淬炼灵魂，拥有置之死地而后生的惊人力量。" }
+                    };
+                    return goddessData[maxKey];
+                });
+
+                const questions = [
+                    { title: "夜色降临，你推开一间静谧的木屋。圆桌上放着六件物品，你最先被哪个吸引？", options: { A: "月桂叶", B: "小油灯", C: "麦穗", D: "玫瑰花", E: "黑色羽毛", F: "刻纹石片" } },
+                    { title: "你握起物品，眼前浮现一扇门。门外吹来阵阵风，你听见——", options: { A: "柔和的夜风吹动树叶", B: "温暖的晨风带甜味", C: "土壤湿润的气息", D: "轻轻的笑声与低语", E: "不知名的小声呢喃", F: "低沉而空旷的风鸣" } },
+                    { title: "走出门，你站在森林入口。你本能地朝哪边走？", options: { A: "月光照亮的小径", B: "晨光泛金的空地", C: "有草香的田边", D: "歌声萦绕的花园", E: "影子晃动的深林", F: "风声狂烈的山崖" } },
+                    { title: "继续前行，一种强烈的感觉浮现心头：", options: { A: "我要单独前进", B: "有人在温柔陪伴我", C: "想确认大家是否安全", D: "探索新事物的兴奋", E: "感觉到隐藏的真相", F: "我正经历重大的转变" } },
+                    { title: "一只动物出现在你面前，你觉得它想传达：", options: { A: "鹿：保持独立", B: "金翅鸟：带去希望", C: "狐狸：照顾好族群", D: "猫：享受当下的美", E: "黑狗：看清迷雾后的事", F: "乌鸦：勇敢迎接变化" } },
+                    { title: "地面出现一个符号，你的第一反应是：", options: { A: "指引方向的标记", B: "温暖的祝福", C: "保护家人的符咒", D: "绝美的艺术创作", E: "某种远古的知识", F: "界线与禁忌的提醒" } },
+                    { title: "不远处升起轻烟，你闻到的味道像——", options: { A: "清冽的草木香", B: "金盏花与柑橘", C: "小麦与烤面包的安稳", D: "玫瑰与浪漫的香脂", E: "艾草与神秘的柏树", F: "烟熏木与深沉药草" } },
+                    { title: "烟雾散去，一件仪式道具让你想触碰：", options: { A: "弯月形的银弓", B: "金色丝绸缎带", C: "暖色的陶制水碗", D: "镶嵌宝石的铜镜", E: "三叉形的古老钥匙", F: "燃烧过的黑色羽毛" } },
+                    { title: "前方岔路有石碑，你选择哪一条路？", options: { A: "自由之路", B: "希望之路", C: "丰盛之路", D: "创造之路", E: "洞察之路", F: "重生之路" } },
+                    { title: "路边忽然传来一句低语，最击中你的是：", options: { A: "你不需要被谁批准", B: "一切都会好起来的", C: "他们正在需要你", D: "你值得被爱与被赞美", E: "看清它，你便会明白", F: "穿过痛苦你会更强" } },
+                    { title: "天空浮现一句话，让你最有共鸣的是：", options: { A: "保持方向", B: "保持温暖", C: "保持踏实", D: "保持欲望", E: "保持敏锐", F: "保持锋利" } },
+                    { title: "最后出现六扇门，你走进哪一扇？", options: { A: "月纹银白之门", B: "朝阳浅金之门", C: "麦穗暖黄之门", D: "玫瑰玫红之门", E: "钥匙墨蓝之门", F: "乌鸦深紫之门" } }
+                ];
+
+                return { step, isLeaving, triggerJourney, currentIndex, questions, handleSelect, goBack, resultData, reset };
             }
         }).mount('#app');
     </script>
