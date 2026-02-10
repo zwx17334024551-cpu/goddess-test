@@ -1,1 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>内在女神原型测试</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;600;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --paper-dark: #e8d5b7;
+            --paper-light: #fdf6e3;
+            --ink: #4a3728;
+            --gold: #b38b4d;
+            --accent: #8b5e3c;
+        }
 
+        body {
+            font-family: 'Noto Serif SC', serif;
+            background-color: var(--paper-dark);
+            color: var(--ink);
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 纹理背景 */
+        .texture-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at center, rgba(253, 246, 227, 0.8) 0%, rgba(232, 213, 183, 0.9) 100%),
+                url('https://www.transparenttextures.com/patterns/paper-fibers.png');
+            opacity: 0.8;
+        }
+
+        /* 装饰图定位 - 复刻第一张图的大气感 */
+        .decor-img {
+            position: fixed;
+            width: 35vw; /* 宽度随屏幕调整 */
+            max-width: 300px;
+            height: auto;
+            z-index: 50;
+            transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+        .img-top-left { top: 0; left: 0; }
+        .img-bottom-right { bottom: 0; right: 0; }
+
+        /* 点击分散消失 */
+        .scatter-tl { transform: translate(-100%, -100%) rotate(-15deg); opacity: 0; }
+        .scatter-br { transform: translate(100%, 100%) rotate(15deg); opacity: 0; }
+
+        /* 内容容器 */
+        .main-content {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 600px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        /* 渐变分割线 */
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--gold), transparent);
+            margin: 2rem auto;
+            width: 50%;
+            position: relative;
+        }
+        .divider::after {
+            content: "◈";
+            position: absolute;
+            left: 50%; top: 50%;
+            transform: translate(-50%, -50%);
+            background: #f8f1e4;
+            padding: 0 10px;
+            font-size: 12px;
+            color: var(--gold);
+        }
+
+        /* 动态视觉区 */
+        .visual-stage {
+            position: relative;
+            width: 100%;
+            height: 240px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 1.5rem 0;
+        }
+
+        /* 球体旋转与缩放 */
+        .qiu-base {
+            position: absolute;
+            width: 220px;
+            height: 220px;
+            z-index: 1;
+            animation: rotate-qiu 20s linear infinite;
+            transition: all 1.2s cubic-bezier(0.7, 0, 0.3, 1);
+            transform-origin: center center;
+        }
+        @keyframes rotate-qiu {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* 穿越动画：放大并上移 */
+        .qiu-travel {
+            transform: scale(15) translateY(-20vh) !important;
+            filter: blur(5px);
+            opacity: 0;
+        }
+
+        /* 走路视频 */
+        .walking-video {
+            position: relative;
+            z-index: 5;
+            width: 140px;
+            height: auto;
+            /* 如果mp4有背景，开启下面混合模式 */
+            mix-blend-mode: multiply;
+        }
+
+        .btn-start {
+            background: #8b5e3c;
+            color: white;
+            padding: 1rem 4rem;
+            border-radius: 999px;
+            font-size: 1.1rem;
+            letter-spacing: 0.3em;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            position: relative;
+            z-index: 60;
+        }
+        .btn-start:active { transform: scale(0.95); }
+
+        /* 问卷选项样式 */
+        .option-item {
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(179, 139, 77, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        /* Vue 切换动画 */
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.8s ease; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+        .text-custom { line-height: 2; text-align: justify; text-justify: inter-character; }
+    </style>
+</head>
+<body>
+    <div class="texture-bg"></div>
+
+    <div id="app" class="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
+        
+        <!-- 封面装饰图片 -->
+        <img v-if="step === 'start'" src="left-top.png" :class="['decor-img img-top-left', { 'scatter-tl': isLeaving }]">
+        <img v-if="step === 'start'" src="right-bottom.png" :class="['decor-img img-bottom-right', { 'scatter-br': isLeaving }]">
+
+        <transition name="fade" mode="out-in">
+            
+            <!-- 1. 封面页 -->
+            <div v-if="step === 'start'" key="start" class="main-content space-y-8">
+                <div class="space-y-2">
+                    <h1 class="text-4xl font-bold tracking-[0.3em] text-[#4a3728]">内在女神原型测试</h1>
+                    <p class="text-[10px] opacity-40 uppercase tracking-[0.5em]">The Goddess Within</p>
+                </div>
+
+                <div class="text-[16px] text-[#5a4a3a] text-custom space-y-6 px-4">
+                    <p>在你的心底，住着一位古老的女神。她不一定会被清晰地看见，却在悄悄影响着你的直觉、选择、关系模式、情绪反应——甚至决定你“为什么是现在的你”。</p>
+                    <p>这份女神原型测试并不是为了把你“分成哪一类”，而是为了启动你内在的神性力量。</p>
+                    <p>让我们一起穿越这段象征性的旅程：森林、小屋、月光、风、火焰、影子……它们会引导你触碰自己最深处的性格原型。</p>
+                    
+                    <div class="divider"></div>
+                    
+                    <p class="text-center font-medium">请凭第一直觉作答。<br>答案没有好坏，只是指向你灵魂的方向。</p>
+                    <p class="text-center font-bold text-lg mt-4">现在，放松下来，让你的内在女神轻轻伸出手。<br>她正等着你。</p>
+                </div>
+
+                <!-- 视觉展示区 -->
+                <div class="visual-stage">
+                    <img src="qiu.png" :class="['qiu-base', { 'qiu-travel': isLeaving }]">
+                    <video class="walking-video" autoplay loop muted playsinline>
+                        <source src="zoulu.mp4" type="video/mp4">
+                        您的浏览器无法播放此视频
+                    </video>
+                </div>
+
+                <button @click="startJourney" class="btn-start">
+                    开启旅程
+                </button>
+            </div>
+
+            <!-- 2. 测试页 (逻辑与样式保持原样) -->
+            <div v-else-if="step === 'quiz'" key="quiz" class="main-content w-full max-w-xl space-y-8">
+                <div class="flex justify-between items-center text-[10px] opacity-50">
+                    <button @click="goBack" v-if="currentIndex > 0" class="flex items-center">
+                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"></path></svg> 返回
+                    </button>
+                    <div v-else></div>
+                    <span>第 {{ currentIndex + 1 }} 章节 / 12</span>
+                </div>
+                
+                <h2 class="text-xl md:text-2xl font-bold text-[#4a3728] leading-snug">
+                    {{ questions[currentIndex].title }}
+                </h2>
+
+                <div class="grid gap-4 pt-6">
+                    <div v-for="(opt, key) in questions[currentIndex].options" 
+                         :key="key" 
+                         @click="handleSelect(key)"
+                         class="option-item p-5 rounded-xl flex items-center group">
+                        <span class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full border border-[#b38b4d]/40 mr-4 text-xs font-bold text-[#b38b4d] group-hover:bg-[#b38b4d] group-hover:text-white transition-all">
+                            {{ key }}
+                        </span>
+                        <span class="text-md opacity-90">{{ opt }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. 过渡准备页 -->
+            <div v-else-if="step === 'preparing'" key="preparing" class="main-content space-y-8">
+                <div class="divider"></div>
+                <div class="space-y-4 text-lg">
+                    <p>你的内在女神在今天被重新看见了。</p>
+                </div>
+                <button @click="step = 'result'" class="btn-start animate-pulse">
+                    揭晓神性原型
+                </button>
+            </div>
+
+            <!-- 4. 结果页 (保持原有逻辑) -->
+            <div v-else-if="step === 'result'" key="result" class="main-content space-y-8">
+                <div class="space-y-2">
+                    <p class="text-xs tracking-[0.4em] opacity-60">唤醒的内在神性是</p>
+                    <h2 class="text-5xl font-bold text-[#8b5e3c] tracking-[0.2em]">{{ resultData.name }}</h2>
+                </div>
+                <div class="divider"></div>
+                <div class="bg-white/40 p-8 rounded-3xl border border-[#b38b4d]/20 text-justify">
+                    <p class="leading-loose text-[#5a4a3a]">{{ resultData.desc }}</p>
+                </div>
+                <button @click="reset" class="text-xs opacity-40 hover:opacity-100 pt-10 uppercase tracking-widest">
+                    — 重新审视灵魂 —
+                </button>
+            </div>
+
+        </transition>
+    </div>
+
+    <script>
+        const { createApp, ref, computed } = Vue;
+
+        createApp({
+            setup() {
+                const step = ref('start');
+                const isLeaving = ref(false);
+                const currentIndex = ref(0);
+                const scores = ref({ A: 0, B: 0, C: 0, D: 0, E: 0, F: 0 });
+                const choiceHistory = ref([]);
+
+                const questions = [
+                    { title: "夜色降临，你推开一间静谧的木屋。圆桌上放着三件物品，你最先被哪个吸引？", options: { A: "月桂叶", B: "小油灯", C: "麦穗", D: "玫瑰花", E: "黑色羽毛", F: "刻纹石片" } },
+                    { title: "你握起物品，眼前浮现一扇门。门外吹来阵阵风，你听见——", options: { A: "柔和的夜风吹动树叶", B: "温暖的晨风带甜味", C: "土壤湿润的气息", D: "轻轻的笑声与低语", E: "不知名的小声呢喃", F: "低沉而空旷的风鸣" } },
+                    { title: "走出门，你站在森林入口。你本能地朝哪边走？", options: { A: "月光照亮的小径", B: "晨光泛金的林间空地", C: "有鸟雀与草香的田边", D: "隐约听见歌声的花园", E: "有影子晃动的深林", F: "风声更狂烈的山崖边" } },
+                    { title: "继续前行，一种强烈的感觉浮现心头：", options: { A: "我要单独前进", B: "有人在温柔陪伴我", C: "想确认大家是否安全", D: "想探索新的东西，好兴奋", E: "我能感觉到隐藏的东西", F: "我知道我会经历转折" } },
+                    { title: "突然，一只动物出现在你面前。你觉得它想传达什么？", options: { A: "鹿：保持独立", B: "金翅鸟：轻盈与希望", C: "母狐：照顾好你的人", D: "猫：美与享受", E: "黑狗：看见门背后的事", F: "乌鸦：准备迎接变化" } },
+                    { title: "地面出现一个符号，你的第一反应是：", options: { A: "指引路线的标记", B: "温暖的祝福", C: "保护用的符咒", D: "美得像艺术作品", E: "某种古老知识", F: "界线与禁忌之符" } },
+                    { title: "不远处升起一股轻烟，你闻到的烟味像——", options: { A: "月桂等清冽草香", B: "金盏花与柑橘香", C: "小麦与木头的安稳味", D: "玫瑰与香脂的浪漫", E: "艾草与柏树的神秘", F: "烟熏木与深调草药" } },
+                    { title: "烟雾散去，一件仪式道具让你忍不住想触碰：", options: { A: "弯月形的弓", B: "金色缎带", C: "暖色陶碗", D: "手持铜镜", E: "三叉钥匙杖", F: "燃烧过的黑色羽毛" } },
+                    { title: "前方岔路有石碑，你选择哪一条？", options: { A: "自由之路", B: "希望之路", C: "丰盛之路", D: "创造之路", E: "洞察之路", F: "重生之路" } },
+                    { title: "你沿着路走，忽然听见一句低语：", options: { A: "你不需要别人批准", B: "一切都会好起来的", C: "他们需要你", D: "你值得被爱，也值得美", E: "看清它，你会明白", F: "痛苦是门，穿过去会更强" } },
+                    { title: "天空浮现一句话，让你最有共鸣的是：", options: { A: "保持方向", B: "保持温暖", C: "保持踏实", D: "保持欲望", E: "保持敏锐", F: "保持锋利" } },
+                    { title: "最后出现六扇门，你走进哪一扇？", options: { A: "月亮纹银白之门", B: "朝阳纹浅金之门", C: "麦穗纹暖黄之门", D: "玫瑰纹玫红之门", E: "钥匙纹墨蓝之门", F: "乌鸦纹深紫之门" } },
+                ];
+
+                const goddessData = {
+                    A: { name: "阿尔忒弥斯", desc: "内心像安静的林间月光。宁愿一个人思考、观察，也不愿被闹哄哄的人群裹挟。她对“自由”极度敏感。" },
+                    B: { name: "厄俄斯", desc: "内在像清晨柔软的阳光。天生带有一种“没关系，一切会好起来”的气质。对美好、浪漫非常敏感。" },
+                    C: { name: "得墨忒耳", desc: "内心像一片金色麦田，踏实温暖。比起惊天动地的大事，更关注三餐、安全感和日常细节。" },
+                    D: { name: "芙蕾雅", desc: "内心像一团火。对生命有强烈的热情，需要美、爱和感官享受来驱动自己。" },
+                    E: { name: "赫卡忒", desc: "内心像通往深处的小路。对气氛、能量和潜台词极度敏锐。陪伴他人度过痛苦的转折期。" },
+                    F: { name: "摩里甘", desc: "内心像乌云压顶前的风，强大而清醒。经历过人生变故，在“跌落-站起”中练就了惊人韧性。" }
+                };
+
+                const startJourney = () => {
+                    isLeaving.value = true;
+                    setTimeout(() => {
+                        step.value = 'quiz';
+                    }, 1200); 
+                };
+
+                const handleSelect = (key) => {
+                    scores.value[key]++;
+                    choiceHistory.value.push(key);
+                    setTimeout(() => {
+                        if (currentIndex.value < 11) {
+                            currentIndex.value++;
+                        } else {
+                            step.value = 'preparing';
+                        }
+                    }, 300);
+                };
+
+                const goBack = () => {
+                    const last = choiceHistory.value.pop();
+                    scores.value[last]--;
+                    currentIndex.value--;
+                };
+
+                const resultData = computed(() => {
+                    let maxKey = 'A';
+                    for (let key in scores.value) {
+                        if (scores.value[key] > scores.value[maxKey]) maxKey = key;
+                    }
+                    return goddessData[maxKey];
+                });
+
+                const reset = () => {
+                    isLeaving.value = false;
+                    step.value = 'start';
+                    currentIndex.value = 0;
+                    choiceHistory.value = [];
+                    Object.keys(scores.value).forEach(k => scores.value[k] = 0);
+                };
+
+                return { step, isLeaving, startJourney, currentIndex, questions, handleSelect, goBack, resultData, reset };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
